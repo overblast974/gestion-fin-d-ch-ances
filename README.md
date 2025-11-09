@@ -5,11 +5,14 @@ Application web simple et élégante pour la gestion des échéances dans les é
 ## Caractéristiques
 
 - **Interface intuitive** : Design moderne et épuré pour une utilisation facile
+- **Deux modes d'affichage** : Vue en grille classique ou frise chronologique visuelle
 - **Gestion des usagers** : Ajout, modification et suppression d'usagers
 - **Gestion des échéances** : Suivi des démarches avec dates de renouvellement et de fin
+- **Frise chronologique** : Visualisation temporelle de toutes les échéances sur une timeline
 - **Notifications intelligentes** : Alertes automatiques pour les échéances proches
 - **Recherche et filtres** : Trouvez rapidement l'information dont vous avez besoin
 - **Statistiques en temps réel** : Vue d'ensemble de votre portefeuille
+- **Export/Import** : Sauvegardez et restaurez vos données facilement
 - **Stockage local** : Toutes vos données sont conservées dans votre navigateur
 
 ## Installation
@@ -62,6 +65,29 @@ Utilisez les boutons de filtre pour afficher :
 - **Tous** : Tous les usagers
 - **Échéances urgentes** : Usagers avec des échéances dans moins de 7 jours
 - **À renouveler** : Usagers avec des renouvellements à prévoir dans moins de 30 jours
+
+### Changer de mode d'affichage
+
+L'application propose deux modes d'affichage :
+
+#### Mode Grille (par défaut)
+- Affiche les usagers sous forme de cartes
+- Vue d'ensemble rapide de tous les usagers
+- Badges de statut (urgent, à renouveler, à jour)
+
+#### Mode Frise Chronologique
+- Visualisation temporelle de toutes les échéances
+- Timeline avec ligne de temps centrale colorée
+- Événements organisés par mois
+- Deux types d'événements :
+  - 🟠 **Date de renouvellement** : Quand commencer la démarche
+  - 🔴 **Date de fin** : Date d'expiration
+- Les échéances urgentes pulsent pour attirer l'attention
+- Cliquez sur un événement pour ouvrir les détails de l'usager
+
+**Pour basculer entre les vues :**
+- Cliquez sur le bouton **"Grille"** ou **"Frise"** dans la barre d'outils
+- Les filtres et la recherche fonctionnent dans les deux vues
 
 ### Modifier ou supprimer
 

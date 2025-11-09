@@ -187,6 +187,7 @@ class UIManager {
         this.searchQuery = '';
         this.currentUserId = null;
         this.currentDeadlineId = null;
+        this.currentView = 'grid'; // 'grid' ou 'timeline'
         this.init();
     }
 
@@ -219,7 +220,7 @@ class UIManager {
         // Recherche
         document.getElementById('searchInput').addEventListener('input', (e) => {
             this.searchQuery = e.target.value.toLowerCase();
-            this.renderUserList();
+            this.renderCurrentView();
         });
 
         // Filtres
@@ -228,7 +229,17 @@ class UIManager {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.currentFilter = e.target.dataset.filter;
-                this.renderUserList();
+                this.renderCurrentView();
+            });
+        });
+
+        // Sélecteur de vue
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                e.target.closest('.view-btn').classList.add('active');
+                this.currentView = e.target.closest('.view-btn').dataset.view;
+                this.switchView();
             });
         });
 
@@ -247,7 +258,30 @@ class UIManager {
 
     render() {
         this.renderStats();
-        this.renderUserList();
+        this.renderCurrentView();
+    }
+
+    switchView() {
+        const gridView = document.getElementById('gridView');
+        const timelineView = document.getElementById('timelineView');
+
+        if (this.currentView === 'grid') {
+            gridView.style.display = 'block';
+            timelineView.style.display = 'none';
+            this.renderUserList();
+        } else {
+            gridView.style.display = 'none';
+            timelineView.style.display = 'block';
+            this.renderTimeline();
+        }
+    }
+
+    renderCurrentView() {
+        if (this.currentView === 'grid') {
+            this.renderUserList();
+        } else {
+            this.renderTimeline();
+        }
     }
 
     // === STATISTIQUES ===
@@ -382,6 +416,155 @@ class UIManager {
             urgentCount,
             upcomingCount
         };
+    }
+
+    // === VUE FRISE CHRONOLOGIQUE ===
+
+    renderTimeline() {
+        const timelineContainer = document.getElementById('timelineContainer');
+        const emptyState = document.getElementById('timelineEmptyState');
+
+        // Récupérer toutes les échéances
+        let allEvents = [];
+
+        this.dataManager.users.forEach(user => {
+            const deadlines = this.dataManager.getDeadlinesByUser(user.id);
+
+            deadlines.forEach(deadline => {
+                // Ajouter l'événement de renouvellement
+                allEvents.push({
+                    type: 'renewal',
+                    date: new Date(deadline.renewalDate),
+                    deadline: deadline,
+                    user: user
+                });
+
+                // Ajouter l'événement de fin
+                allEvents.push({
+                    type: 'end',
+                    date: new Date(deadline.endDate),
+                    deadline: deadline,
+                    user: user
+                });
+            });
+        });
+
+        // Filtrer selon le filtre actuel
+        if (this.currentFilter === 'urgent') {
+            const today = new Date();
+            allEvents = allEvents.filter(event => {
+                const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
+                return event.type === 'end' && daysUntil <= 7 && daysUntil >= 0;
+            });
+        } else if (this.currentFilter === 'upcoming') {
+            const today = new Date();
+            allEvents = allEvents.filter(event => {
+                const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
+                return event.type === 'renewal' && daysUntil <= 30 && daysUntil >= 0;
+            });
+        }
+
+        // Filtrer par recherche
+        if (this.searchQuery) {
+            allEvents = allEvents.filter(event =>
+                event.user.name.toLowerCase().includes(this.searchQuery)
+            );
+        }
+
+        if (allEvents.length === 0) {
+            timelineContainer.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+
+        // Trier par date
+        allEvents.sort((a, b) => a.date - b.date);
+
+        // Grouper par mois
+        const eventsByMonth = {};
+        allEvents.forEach(event => {
+            const monthKey = `${event.date.getFullYear()}-${String(event.date.getMonth() + 1).padStart(2, '0')}`;
+            if (!eventsByMonth[monthKey]) {
+                eventsByMonth[monthKey] = [];
+            }
+            eventsByMonth[monthKey].push(event);
+        });
+
+        // Générer le HTML
+        let html = '<div class="timeline-line"></div>';
+
+        Object.keys(eventsByMonth).forEach((monthKey, index) => {
+            const events = eventsByMonth[monthKey];
+            const firstEvent = events[0];
+            const monthName = firstEvent.date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+            html += `
+                <div class="timeline-month-separator">
+                    <div class="timeline-month-label">${monthName}</div>
+                </div>
+            `;
+
+            events.forEach(event => {
+                html += this.renderTimelineEvent(event);
+            });
+        });
+
+        timelineContainer.innerHTML = html;
+
+        // Ajouter les événements de clic
+        timelineContainer.querySelectorAll('.timeline-event-content').forEach(elem => {
+            elem.addEventListener('click', () => {
+                const userId = elem.dataset.userId;
+                this.openUserDetailsModal(userId);
+            });
+        });
+    }
+
+    renderTimelineEvent(event) {
+        const today = new Date();
+        const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
+
+        let statusClass = '';
+        let markerClass = event.type;
+
+        if (event.type === 'end' && daysUntil <= 7 && daysUntil >= 0) {
+            statusClass = 'urgent';
+            markerClass = 'urgent';
+        } else if (event.type === 'renewal' && daysUntil <= 30 && daysUntil >= 0) {
+            statusClass = 'warning';
+        }
+
+        const typeLabel = event.type === 'renewal' ? 'Renouvellement' : 'Échéance';
+        const dateStr = this.formatDate(event.deadline[event.type === 'renewal' ? 'renewalDate' : 'endDate']);
+
+        let daysInfo = '';
+        if (daysUntil >= 0) {
+            daysInfo = `Dans ${daysUntil} jour${daysUntil > 1 ? 's' : ''}`;
+        } else {
+            daysInfo = `Passé depuis ${Math.abs(daysUntil)} jour${Math.abs(daysUntil) > 1 ? 's' : ''}`;
+        }
+
+        return `
+            <div class="timeline-event">
+                <div class="timeline-event-marker ${markerClass}"></div>
+                <div class="timeline-event-content ${statusClass}" data-user-id="${event.user.id}">
+                    <div class="timeline-event-header">
+                        <div>
+                            <div class="timeline-event-user">${this.escapeHtml(event.user.name)}</div>
+                            <div class="timeline-event-title">${this.escapeHtml(event.deadline.title)}</div>
+                        </div>
+                        <span class="timeline-event-type ${event.type}">${typeLabel}</span>
+                    </div>
+                    ${event.deadline.description ? `<div class="timeline-event-description">${this.escapeHtml(event.deadline.description)}</div>` : ''}
+                    <div class="timeline-event-footer">
+                        <span class="timeline-event-date">${dateStr}</span>
+                        <span style="font-size: 13px; color: var(--text-secondary);">${daysInfo}</span>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // === MODAL USAGER ===

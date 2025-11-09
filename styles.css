@@ -198,6 +198,44 @@ body {
     color: white;
 }
 
+/* Sélecteur de vue */
+.view-switcher {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.view-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--border-color);
+    background-color: white;
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.view-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.view-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.view-btn.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
 /* Statistiques */
 .stats {
     padding: 30px 0;
@@ -715,6 +753,222 @@ body {
     color: var(--text-secondary);
 }
 
+/* Vue Frise Chronologique */
+.timeline-legend {
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.legend-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid;
+}
+
+.legend-marker.renewal {
+    background-color: #FEF3C7;
+    border-color: var(--warning-color);
+}
+
+.legend-marker.end {
+    background-color: #FEE2E2;
+    border-color: var(--danger-color);
+}
+
+.timeline-container {
+    position: relative;
+    padding: 40px 0;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg,
+        var(--primary-color) 0%,
+        var(--warning-color) 50%,
+        var(--danger-color) 100%);
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.timeline-event {
+    position: relative;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.timeline-event:nth-child(even) {
+    flex-direction: row-reverse;
+}
+
+.timeline-event-content {
+    flex: 1;
+    max-width: calc(50% - 50px);
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-left: 4px solid var(--primary-color);
+}
+
+.timeline-event-content:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.timeline-event-content.urgent {
+    border-left-color: var(--danger-color);
+    background-color: #FEF2F2;
+}
+
+.timeline-event-content.warning {
+    border-left-color: var(--warning-color);
+    background-color: #FFFBEB;
+}
+
+.timeline-event-marker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 4px solid;
+    background-color: white;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    box-shadow: 0 0 0 4px white;
+}
+
+.timeline-event-marker.renewal {
+    border-color: var(--warning-color);
+}
+
+.timeline-event-marker.end {
+    border-color: var(--danger-color);
+}
+
+.timeline-event-marker.urgent {
+    border-color: var(--danger-color);
+    animation: pulse-urgent 2s infinite;
+}
+
+@keyframes pulse-urgent {
+    0%, 100% {
+        box-shadow: 0 0 0 4px white, 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+    50% {
+        box-shadow: 0 0 0 4px white, 0 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+}
+
+.timeline-event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.timeline-event-user {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.timeline-event-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.timeline-event-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.timeline-event-date {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timeline-event-type {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.timeline-event-type.renewal {
+    background-color: #FEF3C7;
+    color: #D97706;
+}
+
+.timeline-event-type.end {
+    background-color: #FEE2E2;
+    color: var(--danger-color);
+}
+
+.timeline-event-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.timeline-month-separator {
+    text-align: center;
+    padding: 30px 0 20px;
+    position: relative;
+}
+
+.timeline-month-label {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6366F1 100%);
+    color: white;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 10;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header .container {
@@ -760,6 +1014,40 @@ body {
 
     .deadline-dates {
         grid-template-columns: 1fr;
+    }
+
+    /* Timeline responsive */
+    .view-switcher {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .timeline-legend {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .timeline-event {
+        flex-direction: column !important;
+        align-items: flex-start;
+        padding-left: 40px;
+    }
+
+    .timeline-event-content {
+        max-width: 100%;
+    }
+
+    .timeline-line {
+        left: 20px;
+    }
+
+    .timeline-event-marker {
+        left: 20px;
+    }
+
+    .timeline-month-label {
+        font-size: 12px;
+        padding: 6px 16px;
     }
 }
 

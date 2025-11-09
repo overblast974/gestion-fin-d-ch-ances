@@ -64,6 +64,26 @@
                 <button class="filter-btn" data-filter="urgent">Échéances urgentes</button>
                 <button class="filter-btn" data-filter="upcoming">À renouveler</button>
             </div>
+            <div class="view-switcher">
+                <button class="view-btn active" data-view="grid" title="Vue en grille">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Grille
+                </button>
+                <button class="view-btn" data-view="timeline" title="Vue chronologique">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <circle cx="12" cy="6" r="3"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <circle cx="12" cy="18" r="3"></circle>
+                    </svg>
+                    Frise
+                </button>
+            </div>
         </div>
     </div>
 
@@ -91,20 +111,53 @@
     <!-- Liste des usagers -->
     <main class="main-content">
         <div class="container">
-            <div id="userList" class="user-grid">
-                <!-- Les cartes usagers seront générées ici par JavaScript -->
+            <!-- Vue grille -->
+            <div id="gridView">
+                <div id="userList" class="user-grid">
+                    <!-- Les cartes usagers seront générées ici par JavaScript -->
+                </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <h3>Aucun usager</h3>
+                    <p>Commencez par ajouter un usager pour gérer ses échéances</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('addUserBtn').click()">
+                        Ajouter un usager
+                    </button>
+                </div>
             </div>
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <h3>Aucun usager</h3>
-                <p>Commencez par ajouter un usager pour gérer ses échéances</p>
-                <button class="btn btn-primary" onclick="document.getElementById('addUserBtn').click()">
-                    Ajouter un usager
-                </button>
+
+            <!-- Vue frise chronologique -->
+            <div id="timelineView" style="display: none;">
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <span class="legend-marker renewal"></span>
+                        <span>Date de renouvellement</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker end"></span>
+                        <span>Date de fin</span>
+                    </div>
+                </div>
+                <div id="timelineContainer" class="timeline-container">
+                    <!-- La frise sera générée ici par JavaScript -->
+                </div>
+                <div id="timelineEmptyState" class="empty-state" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <circle cx="12" cy="6" r="3"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <circle cx="12" cy="18" r="3"></circle>
+                    </svg>
+                    <h3>Aucune échéance</h3>
+                    <p>Ajoutez des usagers et des échéances pour voir la frise chronologique</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('addUserBtn').click()">
+                        Ajouter un usager
+                    </button>
+                </div>
             </div>
         </div>
     </main>
