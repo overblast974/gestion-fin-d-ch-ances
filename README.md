@@ -104,39 +104,47 @@ Le tableau de bord affiche en temps réel :
 
 Toutes vos données sont automatiquement sauvegardées dans le navigateur (localStorage). Vous n'avez rien à faire, l'enregistrement est instantané.
 
-### Sauvegarde manuelle (recommandé)
+### Exporter vos données (RECOMMANDÉ)
 
-Pour sécuriser vos données :
+**Il est fortement recommandé d'exporter régulièrement vos données pour éviter toute perte.**
 
-1. Ouvrez la console du navigateur (F12)
-2. Tapez : `console.log(JSON.stringify({users: localStorage.getItem('users'), deadlines: localStorage.getItem('deadlines')}))`
-3. Copiez le résultat et sauvegardez-le dans un fichier texte
+1. Cliquez sur le bouton **"Exporter"** en haut de la page
+2. Un fichier JSON sera téléchargé automatiquement avec un nom comme `echeances-sauvegarde-2025-01-15.json`
+3. Conservez ce fichier dans un endroit sûr (dossier personnel, clé USB, cloud personnel, etc.)
 
-### Restauration
+**Conseils :**
+- Exportez vos données au moins une fois par semaine
+- Conservez plusieurs sauvegardes à différentes dates
+- Nommez vos fichiers de manière claire si vous les renommez
 
-1. Ouvrez la console du navigateur (F12)
-2. Tapez :
-   ```javascript
-   const backup = {users: '...', deadlines: '...'};
-   localStorage.setItem('users', backup.users);
-   localStorage.setItem('deadlines', backup.deadlines);
-   location.reload();
-   ```
+### Importer vos données
+
+Pour restaurer vos données depuis une sauvegarde :
+
+1. Cliquez sur le bouton **"Importer"** en haut de la page
+2. Sélectionnez le fichier JSON que vous avez précédemment exporté
+3. Confirmez l'import (attention, cela remplacera vos données actuelles)
+4. Vos données sont restaurées !
+
+**Utilisation entre navigateurs :**
+- Vous pouvez exporter vos données sur un navigateur (ex: Chrome) et les importer sur un autre (ex: Firefox)
+- Vous pouvez transférer vos données d'un ordinateur à un autre en copiant simplement le fichier JSON
 
 ## Limitations
 
 - Les données sont stockées uniquement dans votre navigateur sur cet ordinateur
-- Si vous videz le cache du navigateur, les données seront perdues
+- Si vous videz le cache du navigateur, les données seront perdues (sauf si vous avez exporté une sauvegarde)
 - L'application fonctionne hors ligne une fois chargée
-- Pas de synchronisation entre plusieurs ordinateurs
+- Pas de synchronisation automatique entre plusieurs ordinateurs (utilisez l'export/import pour transférer vos données)
 
 ## Conseils d'utilisation
 
-1. **Effectuez des sauvegardes régulières** de vos données
-2. **Utilisez toujours le même navigateur** pour accéder à l'application
-3. **Ne videz pas le cache** de votre navigateur sans avoir sauvegardé vos données
+1. **Exportez vos données régulièrement** (au moins une fois par semaine) avec le bouton "Exporter"
+2. **Conservez vos fichiers de sauvegarde** dans plusieurs endroits sûrs
+3. **Utilisez l'export/import** pour transférer vos données entre différents navigateurs ou ordinateurs
 4. **Configurez les notifications** pour ne jamais manquer une échéance
 5. **Vérifiez régulièrement** le tableau de bord pour suivre vos statistiques
+6. **Testez l'import** de temps en temps pour vous assurer que vos sauvegardes fonctionnent
 
 ## Support navigateurs
 
@@ -160,7 +168,8 @@ L'application fonctionne sur :
 
 1. Vérifiez que vous utilisez le même navigateur
 2. Vérifiez que vous n'avez pas vidé le cache
-3. Restaurez vos données depuis une sauvegarde manuelle
+3. Si vous avez exporté une sauvegarde, utilisez le bouton "Importer" pour restaurer vos données
+4. Si vous n'avez pas de sauvegarde, les données sont malheureusement perdues (pensez à exporter régulièrement !)
 
 ### L'application ne s'affiche pas correctement
 

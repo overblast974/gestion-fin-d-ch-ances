@@ -67,6 +67,12 @@ body {
     height: 32px;
 }
 
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 /* Boutons */
 .btn {
     padding: 10px 20px;
@@ -715,6 +721,11 @@ body {
         flex-direction: column;
         gap: 16px;
         text-align: center;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .toolbar .container {

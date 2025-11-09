@@ -142,6 +142,40 @@ class DataManager {
             upcomingRenewals: upcomingCount
         };
     }
+
+    // === EXPORT / IMPORT ===
+
+    exportData() {
+        return {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            users: this.users,
+            deadlines: this.deadlines
+        };
+    }
+
+    importData(data) {
+        // Valider les données
+        if (!data || typeof data !== 'object') {
+            throw new Error('Données invalides');
+        }
+
+        // Vérifier que les données contiennent bien des usagers et des échéances
+        if (!Array.isArray(data.users) || !Array.isArray(data.deadlines)) {
+            throw new Error('Format de données invalide');
+        }
+
+        // Importer les données
+        this.users = data.users;
+        this.deadlines = data.deadlines;
+        this.saveUsers();
+        this.saveDeadlines();
+
+        return {
+            usersCount: this.users.length,
+            deadlinesCount: this.deadlines.length
+        };
+    }
 }
 
 // ===== INTERFACE UTILISATEUR =====
@@ -168,6 +202,19 @@ class UIManager {
     setupEventListeners() {
         // Bouton ajouter usager
         document.getElementById('addUserBtn').addEventListener('click', () => this.openUserModal());
+
+        // Bouton exporter
+        document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
+
+        // Bouton importer
+        document.getElementById('importBtn').addEventListener('click', () => {
+            document.getElementById('importFileInput').click();
+        });
+
+        // Input fichier d'import
+        document.getElementById('importFileInput').addEventListener('change', (e) => {
+            this.importData(e.target.files[0]);
+        });
 
         // Recherche
         document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -667,6 +714,110 @@ class UIManager {
         setTimeout(() => {
             notification.remove();
         }, 5000);
+    }
+
+    // === EXPORT / IMPORT ===
+
+    exportData() {
+        try {
+            const data = this.dataManager.exportData();
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            // Créer un nom de fichier avec la date
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `echeances-sauvegarde-${date}.json`;
+
+            // Créer un lien de téléchargement et le cliquer
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            this.showNotification(
+                'Export réussi',
+                `Données exportées dans ${filename}`,
+                'success'
+            );
+        } catch (error) {
+            this.showNotification(
+                'Erreur d\'export',
+                'Impossible d\'exporter les données: ' + error.message,
+                'danger'
+            );
+        }
+    }
+
+    importData(file) {
+        if (!file) return;
+
+        // Vérifier que c'est bien un fichier JSON
+        if (!file.name.endsWith('.json')) {
+            this.showNotification(
+                'Erreur d\'import',
+                'Le fichier doit être au format JSON',
+                'danger'
+            );
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Demander confirmation avant d'écraser les données
+                const confirmMessage = `Voulez-vous vraiment importer ces données ?\n\n` +
+                    `Usagers à importer: ${data.users?.length || 0}\n` +
+                    `Échéances à importer: ${data.deadlines?.length || 0}\n\n` +
+                    `ATTENTION: Cela remplacera toutes vos données actuelles !`;
+
+                if (!confirm(confirmMessage)) {
+                    // Réinitialiser l'input file
+                    document.getElementById('importFileInput').value = '';
+                    return;
+                }
+
+                const result = this.dataManager.importData(data);
+
+                this.showNotification(
+                    'Import réussi',
+                    `${result.usersCount} usager(s) et ${result.deadlinesCount} échéance(s) importé(s)`,
+                    'success'
+                );
+
+                // Réinitialiser l'input file
+                document.getElementById('importFileInput').value = '';
+
+                // Rafraîchir l'interface
+                this.render();
+
+            } catch (error) {
+                this.showNotification(
+                    'Erreur d\'import',
+                    'Impossible d\'importer les données: ' + error.message,
+                    'danger'
+                );
+                // Réinitialiser l'input file
+                document.getElementById('importFileInput').value = '';
+            }
+        };
+
+        reader.onerror = () => {
+            this.showNotification(
+                'Erreur de lecture',
+                'Impossible de lire le fichier',
+                'danger'
+            );
+            // Réinitialiser l'input file
+            document.getElementById('importFileInput').value = '';
+        };
+
+        reader.readAsText(file);
     }
 
     // === UTILITAIRES ===
