@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Échéances - Établissement Médico-Social</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- En-tête -->
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Gestion des Échéances
+            </h1>
+            <button class="btn btn-primary" id="addUserBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Nouvel Usager
+            </button>
+        </div>
+    </header>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="toolbar">
+        <div class="container">
+            <div class="search-bar">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Rechercher un usager...">
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Tous</button>
+                <button class="filter-btn" data-filter="urgent">Échéances urgentes</button>
+                <button class="filter-btn" data-filter="upcoming">À renouveler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="stats">
+        <div class="container">
+            <div class="stat-card">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Usagers</div>
+            </div>
+            <div class="stat-card urgent">
+                <div class="stat-value" id="urgentDeadlines">0</div>
+                <div class="stat-label">Échéances urgentes</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-value" id="upcomingRenewals">0</div>
+                <div class="stat-label">À renouveler</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone de notification -->
+    <div id="notificationArea"></div>
+
+    <!-- Liste des usagers -->
+    <main class="main-content">
+        <div class="container">
+            <div id="userList" class="user-grid">
+                <!-- Les cartes usagers seront générées ici par JavaScript -->
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <h3>Aucun usager</h3>
+                <p>Commencez par ajouter un usager pour gérer ses échéances</p>
+                <button class="btn btn-primary" onclick="document.getElementById('addUserBtn').click()">
+                    Ajouter un usager
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Ajouter/Modifier un usager -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Nouvel Usager</h2>
+                <button class="close-btn" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="form-group">
+                        <label for="userName">Nom complet *</label>
+                        <input type="text" id="userName" required placeholder="Ex: Jean Dupont">
+                    </div>
+                    <div class="form-group">
+                        <label for="userNotes">Notes (optionnel)</label>
+                        <textarea id="userNotes" rows="3" placeholder="Informations complémentaires..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Détails d'un usager -->
+    <div id="userDetailsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div>
+                    <h2 id="userDetailsName"></h2>
+                    <p class="user-details-info" id="userDetailsInfo"></p>
+                </div>
+                <button class="close-btn" onclick="closeModal('userDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="user-details-actions">
+                    <button class="btn btn-primary" id="addDeadlineBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Nouvelle Échéance
+                    </button>
+                    <button class="btn btn-secondary" id="editUserBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        Modifier
+                    </button>
+                    <button class="btn btn-danger" id="deleteUserBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Supprimer
+                    </button>
+                </div>
+                <div id="deadlinesList" class="deadlines-list">
+                    <!-- Les échéances seront générées ici -->
+                </div>
+                <div id="noDeadlines" class="no-deadlines" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <p>Aucune échéance pour cet usager</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ajouter/Modifier une échéance -->
+    <div id="deadlineModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="deadlineModalTitle">Nouvelle Échéance</h2>
+                <button class="close-btn" onclick="closeModal('deadlineModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="deadlineForm">
+                    <input type="hidden" id="deadlineId">
+                    <input type="hidden" id="deadlineUserId">
+                    <div class="form-group">
+                        <label for="deadlineTitle">Titre de la démarche *</label>
+                        <input type="text" id="deadlineTitle" required placeholder="Ex: Renouvellement AAH">
+                    </div>
+                    <div class="form-group">
+                        <label for="deadlineDescription">Description</label>
+                        <textarea id="deadlineDescription" rows="3" placeholder="Détails de la démarche..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deadlineRenewalDate">Date de début renouvellement *</label>
+                            <input type="date" id="deadlineRenewalDate" required>
+                            <small>Date à laquelle commencer le renouvellement</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="deadlineEndDate">Date de fin *</label>
+                            <input type="date" id="deadlineEndDate" required>
+                            <small>Date d'expiration de la démarche</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="deadlineNotificationDays">Notification avant échéance (jours)</label>
+                        <select id="deadlineNotificationDays">
+                            <option value="7">7 jours avant</option>
+                            <option value="14">14 jours avant</option>
+                            <option value="30" selected>30 jours avant</option>
+                            <option value="60">60 jours avant</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('deadlineModal')">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
