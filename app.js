@@ -418,60 +418,41 @@ class UIManager {
         };
     }
 
-    // === VUE FRISE CHRONOLOGIQUE ===
+    // === VUE FRISE CHRONOLOGIQUE HORIZONTALE ===
 
     renderTimeline() {
         const timelineContainer = document.getElementById('timelineContainer');
         const emptyState = document.getElementById('timelineEmptyState');
 
-        // Récupérer toutes les échéances
-        let allEvents = [];
-
-        this.dataManager.users.forEach(user => {
+        // Récupérer tous les usagers avec échéances
+        let users = this.dataManager.users.filter(user => {
             const deadlines = this.dataManager.getDeadlinesByUser(user.id);
-
-            deadlines.forEach(deadline => {
-                // Ajouter l'événement de renouvellement
-                allEvents.push({
-                    type: 'renewal',
-                    date: new Date(deadline.renewalDate),
-                    deadline: deadline,
-                    user: user
-                });
-
-                // Ajouter l'événement de fin
-                allEvents.push({
-                    type: 'end',
-                    date: new Date(deadline.endDate),
-                    deadline: deadline,
-                    user: user
-                });
-            });
+            return deadlines.length > 0;
         });
-
-        // Filtrer selon le filtre actuel
-        if (this.currentFilter === 'urgent') {
-            const today = new Date();
-            allEvents = allEvents.filter(event => {
-                const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
-                return event.type === 'end' && daysUntil <= 7 && daysUntil >= 0;
-            });
-        } else if (this.currentFilter === 'upcoming') {
-            const today = new Date();
-            allEvents = allEvents.filter(event => {
-                const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
-                return event.type === 'renewal' && daysUntil <= 30 && daysUntil >= 0;
-            });
-        }
 
         // Filtrer par recherche
         if (this.searchQuery) {
-            allEvents = allEvents.filter(event =>
-                event.user.name.toLowerCase().includes(this.searchQuery)
+            users = users.filter(user =>
+                user.name.toLowerCase().includes(this.searchQuery)
             );
         }
 
-        if (allEvents.length === 0) {
+        // Filtrer selon le filtre actuel
+        if (this.currentFilter !== 'all') {
+            users = users.filter(user => {
+                const deadlines = this.dataManager.getDeadlinesByUser(user.id);
+                const status = this.getUserStatus(deadlines);
+
+                if (this.currentFilter === 'urgent') {
+                    return status.hasUrgent;
+                } else if (this.currentFilter === 'upcoming') {
+                    return status.hasUpcoming;
+                }
+                return true;
+            });
+        }
+
+        if (users.length === 0) {
             timelineContainer.innerHTML = '';
             emptyState.style.display = 'block';
             return;
@@ -479,42 +460,46 @@ class UIManager {
 
         emptyState.style.display = 'none';
 
-        // Trier par date
-        allEvents.sort((a, b) => a.date - b.date);
-
-        // Grouper par mois
-        const eventsByMonth = {};
-        allEvents.forEach(event => {
-            const monthKey = `${event.date.getFullYear()}-${String(event.date.getMonth() + 1).padStart(2, '0')}`;
-            if (!eventsByMonth[monthKey]) {
-                eventsByMonth[monthKey] = [];
-            }
-            eventsByMonth[monthKey].push(event);
-        });
+        // Calculer la plage de dates pour la timeline
+        const { startDate, endDate, months } = this.calculateTimelineRange(users);
 
         // Générer le HTML
-        let html = '<div class="timeline-line"></div>';
+        let html = '<div class="timeline-horizontal">';
 
-        Object.keys(eventsByMonth).forEach((monthKey, index) => {
-            const events = eventsByMonth[monthKey];
-            const firstEvent = events[0];
-            const monthName = firstEvent.date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-
+        // Axe du temps
+        html += '<div class="timeline-axis"><div class="timeline-axis-months">';
+        months.forEach(month => {
             html += `
-                <div class="timeline-month-separator">
-                    <div class="timeline-month-label">${monthName}</div>
+                <div class="timeline-month-marker">
+                    <div class="timeline-month-label">${month.label}</div>
                 </div>
             `;
-
-            events.forEach(event => {
-                html += this.renderTimelineEvent(event);
-            });
         });
+        html += '</div></div>';
+
+        // Lignes des usagers
+        html += '<div class="timeline-users">';
+        users.forEach(user => {
+            html += this.renderTimelineUserRow(user, startDate, endDate, months.length);
+        });
+        html += '</div>';
+
+        html += '</div>';
 
         timelineContainer.innerHTML = html;
 
-        // Ajouter les événements de clic
-        timelineContainer.querySelectorAll('.timeline-event-content').forEach(elem => {
+        // Ajouter les événements de clic sur les points
+        timelineContainer.querySelectorAll('.timeline-event-dot').forEach(elem => {
+            elem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const deadlineId = elem.dataset.deadlineId;
+                const userId = elem.dataset.userId;
+                this.showDeadlineDetails(deadlineId, userId);
+            });
+        });
+
+        // Ajouter les événements de clic sur les lignes d'usager
+        timelineContainer.querySelectorAll('.timeline-user-label').forEach(elem => {
             elem.addEventListener('click', () => {
                 const userId = elem.dataset.userId;
                 this.openUserDetailsModal(userId);
@@ -522,49 +507,145 @@ class UIManager {
         });
     }
 
-    renderTimelineEvent(event) {
+    calculateTimelineRange(users) {
         const today = new Date();
-        const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
+        let minDate = new Date(today);
+        let maxDate = new Date(today);
 
-        let statusClass = '';
-        let markerClass = event.type;
+        // Calculer la plage de dates basée sur toutes les échéances
+        users.forEach(user => {
+            const deadlines = this.dataManager.getDeadlinesByUser(user.id);
+            deadlines.forEach(deadline => {
+                const renewalDate = new Date(deadline.renewalDate);
+                const endDate = new Date(deadline.endDate);
 
-        if (event.type === 'end' && daysUntil <= 7 && daysUntil >= 0) {
-            statusClass = 'urgent';
-            markerClass = 'urgent';
-        } else if (event.type === 'renewal' && daysUntil <= 30 && daysUntil >= 0) {
-            statusClass = 'warning';
+                if (renewalDate < minDate) minDate = renewalDate;
+                if (endDate > maxDate) maxDate = endDate;
+            });
+        });
+
+        // Ajouter des marges (1 mois avant et après)
+        minDate.setMonth(minDate.getMonth() - 1);
+        maxDate.setMonth(maxDate.getMonth() + 1);
+
+        // Commencer au début du mois
+        minDate.setDate(1);
+
+        // Générer la liste des mois
+        const months = [];
+        const current = new Date(minDate);
+        while (current <= maxDate) {
+            months.push({
+                date: new Date(current),
+                label: current.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+            });
+            current.setMonth(current.getMonth() + 1);
         }
 
-        const typeLabel = event.type === 'renewal' ? 'Renouvellement' : 'Échéance';
-        const dateStr = this.formatDate(event.deadline[event.type === 'renewal' ? 'renewalDate' : 'endDate']);
+        return { startDate: minDate, endDate: maxDate, months };
+    }
+
+    renderTimelineUserRow(user, startDate, endDate, monthsCount) {
+        const deadlines = this.dataManager.getDeadlinesByUser(user.id);
+        const initials = this.getInitials(user.name);
+
+        let html = `
+            <div class="timeline-user-row">
+                <div class="timeline-user-label" data-user-id="${user.id}" style="cursor: pointer;">
+                    <div class="timeline-user-avatar-small">${initials}</div>
+                    <span>${this.escapeHtml(user.name)}</span>
+                </div>
+                <div class="timeline-user-events">
+        `;
+
+        // Ajouter les événements pour cet usager
+        deadlines.forEach(deadline => {
+            // Point pour la date de renouvellement
+            html += this.renderTimelineEventDot(deadline, 'renewal', startDate, endDate, monthsCount, user.id);
+
+            // Point pour la date de fin
+            html += this.renderTimelineEventDot(deadline, 'end', startDate, endDate, monthsCount, user.id);
+
+            // Ligne de période entre renouvellement et fin
+            const renewalDate = new Date(deadline.renewalDate);
+            const deadlineEndDate = new Date(deadline.endDate);
+            const renewalPos = this.calculateTimelinePosition(renewalDate, startDate, endDate, monthsCount);
+            const endPos = this.calculateTimelinePosition(deadlineEndDate, startDate, endDate, monthsCount);
+
+            html += `
+                <div class="timeline-event-period" style="left: ${renewalPos}%; width: ${endPos - renewalPos}%;"></div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        return html;
+    }
+
+    renderTimelineEventDot(deadline, type, startDate, endDate, monthsCount, userId) {
+        const today = new Date();
+        const eventDate = new Date(type === 'renewal' ? deadline.renewalDate : deadline.endDate);
+        const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+
+        // Calculer la position sur la timeline
+        const position = this.calculateTimelinePosition(eventDate, startDate, endDate, monthsCount);
+
+        // Déterminer la classe de statut
+        let statusClass = 'success';
+        if (type === 'end' && daysUntil <= 7 && daysUntil >= 0) {
+            statusClass = 'urgent';
+        } else if (type === 'renewal' && daysUntil <= 30 && daysUntil >= 0) {
+            statusClass = 'warning';
+        } else if (type === 'renewal') {
+            statusClass = 'renewal';
+        } else if (type === 'end') {
+            statusClass = 'end';
+        }
+
+        const typeLabel = type === 'renewal' ? 'Renouvellement' : 'Date de fin';
+        const dateStr = this.formatDate(type === 'renewal' ? deadline.renewalDate : deadline.endDate);
 
         let daysInfo = '';
         if (daysUntil >= 0) {
             daysInfo = `Dans ${daysUntil} jour${daysUntil > 1 ? 's' : ''}`;
         } else {
-            daysInfo = `Passé depuis ${Math.abs(daysUntil)} jour${Math.abs(daysUntil) > 1 ? 's' : ''}`;
+            daysInfo = `Passé`;
         }
 
         return `
-            <div class="timeline-event">
-                <div class="timeline-event-marker ${markerClass}"></div>
-                <div class="timeline-event-content ${statusClass}" data-user-id="${event.user.id}">
-                    <div class="timeline-event-header">
-                        <div>
-                            <div class="timeline-event-user">${this.escapeHtml(event.user.name)}</div>
-                            <div class="timeline-event-title">${this.escapeHtml(event.deadline.title)}</div>
-                        </div>
-                        <span class="timeline-event-type ${event.type}">${typeLabel}</span>
-                    </div>
-                    ${event.deadline.description ? `<div class="timeline-event-description">${this.escapeHtml(event.deadline.description)}</div>` : ''}
-                    <div class="timeline-event-footer">
-                        <span class="timeline-event-date">${dateStr}</span>
-                        <span style="font-size: 13px; color: var(--text-secondary);">${daysInfo}</span>
-                    </div>
+            <div class="timeline-event-dot ${statusClass}"
+                 style="left: ${position}%;"
+                 data-deadline-id="${deadline.id}"
+                 data-user-id="${userId}"
+                 title="${this.escapeHtml(deadline.title)} - ${typeLabel}">
+                <div class="timeline-tooltip">
+                    <div class="timeline-tooltip-title">${this.escapeHtml(deadline.title)}</div>
+                    <div class="timeline-tooltip-type">${typeLabel}</div>
+                    <div class="timeline-tooltip-date">${dateStr} (${daysInfo})</div>
                 </div>
             </div>
         `;
+    }
+
+    calculateTimelinePosition(date, startDate, endDate, monthsCount) {
+        const totalMs = endDate - startDate;
+        const dateMs = date - startDate;
+        const position = (dateMs / totalMs) * 100;
+        return Math.max(0, Math.min(100, position));
+    }
+
+    showDeadlineDetails(deadlineId, userId) {
+        const deadline = this.dataManager.deadlines.find(d => d.id === deadlineId);
+        const user = this.dataManager.getUser(userId);
+
+        if (!deadline || !user) return;
+
+        // Pour l'instant, ouvrir le modal de détails de l'usager
+        // On pourrait créer un modal spécifique pour l'échéance si besoin
+        this.openUserDetailsModal(userId);
     }
 
     // === MODAL USAGER ===
