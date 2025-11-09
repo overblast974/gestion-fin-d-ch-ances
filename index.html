@@ -134,12 +134,24 @@
             <div id="timelineView" style="display: none;">
                 <div class="timeline-legend">
                     <div class="legend-item">
+                        <span class="legend-marker success"></span>
+                        <span>À jour</span>
+                    </div>
+                    <div class="legend-item">
                         <span class="legend-marker renewal"></span>
-                        <span>Date de renouvellement</span>
+                        <span>Renouvellement (bordure pointillée)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker" style="background-color: #FEF3C7; border-color: #F59E0B;"></span>
+                        <span>À renouveler (&lt; 30 jours)</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-marker end"></span>
-                        <span>Date de fin</span>
+                        <span>Échéance finale</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker" style="background-color: #FEE2E2; border-color: #EF4444;"></span>
+                        <span>Urgent (&lt; 7 jours)</span>
                     </div>
                 </div>
                 <div id="timelineContainer" class="timeline-container">
@@ -147,10 +159,10 @@
                 </div>
                 <div id="timelineEmptyState" class="empty-state" style="display: none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="2" x2="12" y2="22"></line>
-                        <circle cx="12" cy="6" r="3"></circle>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <circle cx="6" cy="12" r="3"></circle>
                         <circle cx="12" cy="12" r="3"></circle>
-                        <circle cx="12" cy="18" r="3"></circle>
+                        <circle cx="18" cy="12" r="3"></circle>
                     </svg>
                     <h3>Aucune échéance</h3>
                     <p>Ajoutez des usagers et des échéances pour voir la frise chronologique</p>
