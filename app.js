@@ -549,46 +549,62 @@ class UIManager {
         const deadlines = this.dataManager.getDeadlinesByUser(user.id);
         const initials = this.getInitials(user.name);
 
-        let html = `
-            <div class="timeline-user-row">
-                <div class="timeline-user-label" data-user-id="${user.id}" style="cursor: pointer;">
-                    <div class="timeline-user-avatar-small">${initials}</div>
-                    <span>${this.escapeHtml(user.name)}</span>
-                </div>
-                <div class="timeline-user-events">
-        `;
+        let html = '';
 
-        // Ajouter les événements pour cet usager
-        deadlines.forEach(deadline => {
-            // Point pour la date de renouvellement
-            html += this.renderTimelineEventDot(deadline, 'renewal', startDate, endDate, monthsCount, user.id);
-
-            // Point pour la date de fin
-            html += this.renderTimelineEventDot(deadline, 'end', startDate, endDate, monthsCount, user.id);
-
-            // Ligne de période entre renouvellement et fin
+        // Créer une ligne pour chaque échéance (document)
+        deadlines.forEach((deadline, index) => {
+            const today = new Date();
             const renewalDate = new Date(deadline.renewalDate);
             const deadlineEndDate = new Date(deadline.endDate);
+            const daysUntilRenewal = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
+            const daysUntilEnd = Math.ceil((deadlineEndDate - today) / (1000 * 60 * 60 * 24));
+
+            // Déterminer le statut pour la couleur de fond
+            let rowStatus = '';
+            if (daysUntilEnd <= 7 && daysUntilEnd >= 0) {
+                rowStatus = 'urgent';
+            } else if (daysUntilRenewal <= 30 && daysUntilRenewal >= 0) {
+                rowStatus = 'warning';
+            }
+
+            html += `
+                <div class="timeline-user-row ${rowStatus}" data-deadline-id="${deadline.id}">
+                    <div class="timeline-user-label" data-user-id="${user.id}" style="cursor: pointer;">
+                        <div class="timeline-user-avatar-small">${initials}</div>
+                        <div class="timeline-label-content">
+                            <div class="timeline-user-name">${this.escapeHtml(user.name)}</div>
+                            <div class="timeline-document-title">${this.escapeHtml(deadline.title)}</div>
+                        </div>
+                    </div>
+                    <div class="timeline-user-events">
+            `;
+
+            // Ligne de période entre renouvellement et fin
             const renewalPos = this.calculateTimelinePosition(renewalDate, startDate, endDate, monthsCount);
             const endPos = this.calculateTimelinePosition(deadlineEndDate, startDate, endDate, monthsCount);
 
             html += `
-                <div class="timeline-event-period" style="left: ${renewalPos}%; width: ${endPos - renewalPos}%;"></div>
+                <div class="timeline-event-period ${rowStatus}" style="left: ${renewalPos}%; width: ${endPos - renewalPos}%;"></div>
+            `;
+
+            // Point pour la date de renouvellement avec badge
+            html += this.renderTimelineEventDot(deadline, 'renewal', startDate, endDate, monthsCount, user.id, daysUntilRenewal);
+
+            // Point pour la date de fin avec badge
+            html += this.renderTimelineEventDot(deadline, 'end', startDate, endDate, monthsCount, user.id, daysUntilEnd);
+
+            html += `
+                    </div>
+                </div>
             `;
         });
-
-        html += `
-                </div>
-            </div>
-        `;
 
         return html;
     }
 
-    renderTimelineEventDot(deadline, type, startDate, endDate, monthsCount, userId) {
+    renderTimelineEventDot(deadline, type, startDate, endDate, monthsCount, userId, daysUntil) {
         const today = new Date();
         const eventDate = new Date(type === 'renewal' ? deadline.renewalDate : deadline.endDate);
-        const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
 
         // Calculer la position sur la timeline
         const position = this.calculateTimelinePosition(eventDate, startDate, endDate, monthsCount);
@@ -605,26 +621,42 @@ class UIManager {
             statusClass = 'end';
         }
 
-        const typeLabel = type === 'renewal' ? 'Renouvellement' : 'Date de fin';
+        const typeLabel = type === 'renewal' ? '🔄 Renouvellement' : '🔚 Date de fin';
         const dateStr = this.formatDate(type === 'renewal' ? deadline.renewalDate : deadline.endDate);
 
         let daysInfo = '';
+        let badgeContent = '';
         if (daysUntil >= 0) {
             daysInfo = `Dans ${daysUntil} jour${daysUntil > 1 ? 's' : ''}`;
+            badgeContent = `J-${daysUntil}`;
         } else {
-            daysInfo = `Passé`;
+            daysInfo = `Expiré depuis ${Math.abs(daysUntil)} jour${Math.abs(daysUntil) > 1 ? 's' : ''}`;
+            badgeContent = `Expiré`;
+            statusClass += ' expired';
+        }
+
+        // Badge visible uniquement si urgent ou proche
+        let badgeHtml = '';
+        if ((type === 'end' && daysUntil <= 30 && daysUntil >= 0) ||
+            (type === 'renewal' && daysUntil <= 30 && daysUntil >= 0) ||
+            daysUntil < 0) {
+            badgeHtml = `<div class="timeline-event-badge ${statusClass}">${badgeContent}</div>`;
         }
 
         return `
-            <div class="timeline-event-dot ${statusClass}"
+            <div class="timeline-event-dot ${statusClass} ${type}"
                  style="left: ${position}%;"
                  data-deadline-id="${deadline.id}"
                  data-user-id="${userId}"
+                 data-type="${type}"
                  title="${this.escapeHtml(deadline.title)} - ${typeLabel}">
+                ${badgeHtml}
                 <div class="timeline-tooltip">
                     <div class="timeline-tooltip-title">${this.escapeHtml(deadline.title)}</div>
                     <div class="timeline-tooltip-type">${typeLabel}</div>
-                    <div class="timeline-tooltip-date">${dateStr} (${daysInfo})</div>
+                    <div class="timeline-tooltip-date">${dateStr}</div>
+                    <div class="timeline-tooltip-days">${daysInfo}</div>
+                    ${deadline.description ? `<div class="timeline-tooltip-description">${this.escapeHtml(deadline.description)}</div>` : ''}
                 </div>
             </div>
         `;
