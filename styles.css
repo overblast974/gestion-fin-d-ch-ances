@@ -1111,22 +1111,22 @@ body {
 /* Tooltip au survol */
 .timeline-tooltip {
     position: absolute;
-    bottom: calc(100% + 35px);
+    bottom: calc(100% + 30px);
     left: 50%;
-    transform: translateX(-50%) scale(0.9);
+    transform: translateX(-50%) scale(0.85);
     background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
     color: white;
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
     transition: all 0.2s ease;
     z-index: 1000;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    max-width: 280px;
-    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    max-width: 200px;
+    min-width: 120px;
 }
 
 .timeline-tooltip::after {
@@ -1135,7 +1135,7 @@ body {
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border: 6px solid transparent;
+    border: 5px solid transparent;
     border-top-color: #111827;
 }
 
@@ -1146,49 +1146,54 @@ body {
 
 .timeline-tooltip-title {
     font-weight: 700;
-    font-size: 12px;
-    margin-bottom: 6px;
+    font-size: 11px;
+    margin-bottom: 4px;
     color: #FFFFFF;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    padding-bottom: 4px;
+    padding-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 180px;
 }
 
 .timeline-tooltip-type {
     display: inline-block;
-    padding: 3px 8px;
+    padding: 2px 6px;
     background-color: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    font-size: 10px;
+    border-radius: 8px;
+    font-size: 9px;
     font-weight: 600;
-    margin-bottom: 5px;
-}
-
-.timeline-tooltip-date {
-    font-size: 11px;
-    font-weight: 600;
-    opacity: 0.95;
     margin-bottom: 3px;
 }
 
-.timeline-tooltip-days {
+.timeline-tooltip-date {
     font-size: 10px;
-    opacity: 0.85;
-    font-weight: 500;
+    font-weight: 600;
+    opacity: 0.95;
     margin-bottom: 2px;
 }
 
+.timeline-tooltip-days {
+    font-size: 9px;
+    opacity: 0.85;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
 .timeline-tooltip-description {
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 4px;
+    padding-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
-    font-size: 10px;
-    opacity: 0.9;
+    font-size: 9px;
+    opacity: 0.85;
     white-space: normal;
-    max-width: 260px;
-    line-height: 1.4;
+    max-width: 180px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* Modal de détails d'échéance */
@@ -1392,30 +1397,35 @@ body {
     }
 
     .timeline-tooltip {
-        font-size: 10px;
-        padding: 8px 10px;
-        max-width: 220px;
-        min-width: 140px;
+        font-size: 9px;
+        padding: 5px 8px;
+        max-width: 160px;
+        min-width: 100px;
     }
 
     .timeline-tooltip-title {
-        font-size: 11px;
-        margin-bottom: 4px;
+        font-size: 10px;
+        margin-bottom: 3px;
+        max-width: 140px;
     }
 
     .timeline-tooltip-type {
-        font-size: 9px;
-        padding: 2px 6px;
+        font-size: 8px;
+        padding: 2px 5px;
     }
 
-    .timeline-tooltip-date,
-    .timeline-tooltip-days {
+    .timeline-tooltip-date {
         font-size: 9px;
+    }
+
+    .timeline-tooltip-days {
+        font-size: 8px;
     }
 
     .timeline-tooltip-description {
-        font-size: 9px;
-        max-width: 200px;
+        font-size: 8px;
+        max-width: 140px;
+        -webkit-line-clamp: 1;
     }
 }
 
