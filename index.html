@@ -133,25 +133,35 @@
             <!-- Vue frise chronologique -->
             <div id="timelineView" style="display: none;">
                 <div class="timeline-legend">
-                    <div class="legend-item">
-                        <span class="legend-marker success"></span>
-                        <span>À jour</span>
+                    <div class="legend-section">
+                        <div class="legend-section-title">Types d'événements :</div>
+                        <div class="legend-items-row">
+                            <div class="legend-item">
+                                <span class="legend-marker renewal-marker"></span>
+                                <span>🔄 Début renouvellement</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-marker end-marker"></span>
+                                <span>🔚 Date de fin</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-marker renewal"></span>
-                        <span>Renouvellement (bordure pointillée)</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-marker" style="background-color: #FEF3C7; border-color: #F59E0B;"></span>
-                        <span>À renouveler (&lt; 30 jours)</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-marker end"></span>
-                        <span>Échéance finale</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-marker" style="background-color: #FEE2E2; border-color: #EF4444;"></span>
-                        <span>Urgent (&lt; 7 jours)</span>
+                    <div class="legend-section">
+                        <div class="legend-section-title">États :</div>
+                        <div class="legend-items-row">
+                            <div class="legend-item">
+                                <span class="legend-badge urgent-badge">J-5</span>
+                                <span>Urgent (&lt; 7 jours)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-badge warning-badge">J-20</span>
+                                <span>À renouveler (&lt; 30 jours)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-badge expired-badge">Expiré</span>
+                                <span>Échéance passée</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div id="timelineContainer" class="timeline-container">
