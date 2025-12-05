@@ -509,8 +509,8 @@ class UIManager {
 
     calculateTimelineRange(users) {
         const today = new Date();
-        let minDate = new Date(today);
-        let maxDate = new Date(today);
+        let minDate = null;
+        let maxDate = null;
 
         // Calculer la plage de dates basée sur toutes les échéances
         users.forEach(user => {
@@ -519,10 +519,17 @@ class UIManager {
                 const renewalDate = new Date(deadline.renewalDate);
                 const endDate = new Date(deadline.endDate);
 
-                if (renewalDate < minDate) minDate = renewalDate;
-                if (endDate > maxDate) maxDate = endDate;
+                if (!minDate || renewalDate < minDate) minDate = new Date(renewalDate);
+                if (!maxDate || endDate > maxDate) maxDate = new Date(endDate);
             });
         });
+
+        // Si pas d'échéances, utiliser une plage par défaut
+        if (!minDate || !maxDate) {
+            minDate = new Date(today);
+            maxDate = new Date(today);
+            maxDate.setMonth(maxDate.getMonth() + 12);
+        }
 
         // Ajouter des marges (1 mois avant et après)
         minDate.setMonth(minDate.getMonth() - 1);
@@ -534,12 +541,16 @@ class UIManager {
         // Générer la liste des mois
         const months = [];
         const current = new Date(minDate);
-        while (current <= maxDate) {
+        let counter = 0;
+        const MAX_MONTHS = 200; // Protection contre boucle infinie
+
+        while (current <= maxDate && counter < MAX_MONTHS) {
             months.push({
                 date: new Date(current),
                 label: current.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
             });
             current.setMonth(current.getMonth() + 1);
+            counter++;
         }
 
         return { startDate: minDate, endDate: maxDate, months };
